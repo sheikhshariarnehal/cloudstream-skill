@@ -11,6 +11,10 @@ description: >-
   debugging an existing provider's search/home/load/loadLinks logic or its
   build.gradle.kts.
 triggers:
+  - /provider
+  - provider
+  - add provider
+  - new provider
   - cloudstream
   - cloudstream provider
   - cloudstream plugin
@@ -39,6 +43,17 @@ runtime. A provider is a Kotlin class that knows how to search a specific site, 
 page, load a title's metadata/episodes, and resolve the actual playable video URL. Compiled
 plugins ship as `.cs3` files (a renamed zip containing `classes.dex` + `manifest.json`) referenced
 from a `plugins.json` that CloudStream fetches from a repo.
+
+## Slash Command: `/provider <url>`
+
+When the user types `/provider <website_url>`, gives a target streaming site with `/provider`, or asks to create a provider for a site, execute the automated 4-phase workflow in **[`workflows/add-provider.md`](workflows/add-provider.md)**:
+
+1. **Phase 1 — Recon & Stream Feasibility**: Inspect the target site's DOM, test search query parameters, identify home/catalog sections, check detail page metadata/episodes, and crucially locate playable video stream links (`.m3u8`/`.mp4` or supported iframe embeds like StreamTape/Vidcloud/Filemoon).
+2. **Phase 2 — Architecture Mapping**: Determine the provider name (`<SiteName>Provider`), package (`com.<sitename>`), content types (`TvType.Movie`, `TvType.TvSeries`), and extractor strategy.
+3. **Phase 3 — Implementation**: Scaffold `<SiteName>Provider/build.gradle.kts`, `<SiteName>Provider.kt` implementing `search`, `getMainPage`, `load`, and `loadLinks`, and `<SiteName>Plugin.kt` entry point.
+4. **Phase 4 — Verification**: Check Gradle build readiness (`./gradlew <SiteName>Provider:make`) and present testing steps.
+
+---
 
 ## Before writing any code: check feasibility first
 
