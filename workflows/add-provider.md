@@ -66,7 +66,10 @@ This workflow executes automatically when the user types `/provider <url>`, give
   - **Server list:** Look for `<div class="servers">` with `data-id`, `data-embed`, or `data-src`.
   - **API stream call:** Check network tab or JS scripts for encrypted keys or stream endpoints.
 - Check if the embed host is already supported by CloudStream built-in extractors (`StreamTape`, `Vidcloud`, `Superstream`, `Mixdrop`, `Doodstream`, `Filemoon`, `Streamwish`, etc.).
+- If links are shortlinks (e.g., bit.ly, ouo): note that CloudStream has built-in `unshortenLinkSafe(url)`.
+- If the stream page contains `eval(function(p,a,c,k,e,d)...)`: use CloudStream's built-in `JsUnpacker(script).unpack()`.
 - If custom or obfuscated: inspect how the embed decodes the `.m3u8` or `.mp4` link (Base64, AES, or JS unpacker).
+- If MPEG-DASH with ClearKey DRM: note `kid` and `key` extraction pattern for `newDrmExtractorLink`.
 
 ---
 
@@ -78,13 +81,15 @@ This workflow executes automatically when the user types `/provider <url>`, give
 - **Module Name:** `<SanitizedSiteName>Provider` (PascalCase, e.g., `FlixWaveProvider`, `MovieRulzProvider`)
 - **Package Name:** `com.<sitename_lowercase>` (e.g., `com.flixwave`, `com.movierulz`)
 - **Provider Class:** `<SanitizedSiteName>Provider : MainAPI()`
-- **Plugin Class:** `<SanitizedSiteName>Plugin : BasePlugin()`
+- **Plugin Class:** `<SanitizedSiteName>Plugin : Plugin()` (subclass `Plugin` rather than `BasePlugin` to receive Android `Context` and support `openSettings`)
 
-### Step 2.2: Map Capabilities
-- `supportedTypes = setOf(TvType.Movie, TvType.TvSeries)` (or Anime / Cartoon)
+### Step 2.2: Map Capabilities & Engine Flags
+- `supportedTypes = setOf(TvType.Movie, TvType.TvSeries)` (or `Anime`, `Live`)
 - `hasMainPage = true`
 - `lang = "..."` (matching site language, e.g., `"en"`)
+- `sequentialMainPage = true` (if site rate-limits or throws 429 when rows load simultaneously)
 - Decide if custom `ExtractorApi` is needed or standard `loadExtractor(...)` call is sufficient.
+- Decide if `getVideoInterceptor` is needed to provide headers during ExoPlayer playback.
 
 ---
 

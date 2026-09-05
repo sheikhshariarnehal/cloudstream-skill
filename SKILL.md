@@ -237,6 +237,9 @@ trailing builder lambda — passing them as named constructor parameters is a co
   append `|| true` to that step until the first successful build.
 - Episodes are not paginated in CloudStream — if a show has 20 seasons spread across separate
   site pages, the provider must fetch and flatten all of them itself.
+- **Never use `apmap`** — it is deprecated with `DeprecationLevel.ERROR` because it blocks threads with `runBlocking`. Always use `amap` or `amapIndexed`.
+- If a site rate-limits or blocks simultaneous homepage requests, set `sequentialMainPage = true`.
+- Use the built-in `JsUnpacker(script).unpack()` for Dean Edwards `eval(p,a,c,k,e,d)` packed scripts before trying third-party JS engines.
 
 ## Quick Reference & API Cheat Sheet
 
@@ -244,6 +247,9 @@ trailing builder lambda — passing them as named constructor parameters is a co
 |---|---|
 | HTTP GET | `val doc = app.get(url, headers = mapOf("Referer" to mainUrl)).document` |
 | HTTP POST Form | `val res = app.post(url, data = mapOf("query" to q)).parsedSafe<MyResponse>()` |
+| Concurrent Async Map | `items.amap { app.get(it.url) }` or `items.amapIndexed { idx, it -> ... }` |
+| Unpack Eval JS | `val unpacked = JsUnpacker(scriptText).unpack()` |
+| Unshorten URL | `val finalUrl = unshortenLinkSafe(shortUrl)` |
 | Fix relative URL | `val fullUrl = fixUrl(element.attr("href"))` / `fixUrlNull(...)` |
 | Search Result | `newMovieSearchResponse(name, url, TvType.Movie) { this.posterUrl = poster }` |
 | TV Series Result | `newTvSeriesSearchResponse(name, url, TvType.TvSeries) { this.posterUrl = poster }` |
@@ -256,4 +262,6 @@ trailing builder lambda — passing them as named constructor parameters is a co
 | Anime Dub/Sub | `newAnimeSearchResponse(name, url, TvType.Anime) { addDubStatus(dubExist = true, dubEpisodes = d, subExist = true, subEpisodes = s) }` |
 | Backdrops & Extras | `this.backgroundPosterUrl = backdrop; addActors(listOf("...")); addTrailer(trailerUrl)` |
 | Plugin Settings UI | Subclass `Plugin()` and configure `openSettings = { ... }` with a `BottomSheetDialogFragment` |
+| Player Stream Interceptor | Override `getVideoInterceptor(extractorLink): Interceptor` to attach auth/headers during playback |
+
 

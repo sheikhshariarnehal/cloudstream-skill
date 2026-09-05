@@ -117,8 +117,8 @@ override suspend fun load(url: String): LoadResponse {
         val seasons = app.get("$mainUrl/ajax/v2/tv/seasons/$id").document
             .select("div.dropdown-menu > a")
 
-        seasons.apmapIndexed { seasonIndex, seasonEl ->
-            val seasonId = seasonEl.attr("data-id").ifBlank { return@apmapIndexed }
+        seasons.amapIndexed { seasonIndex, seasonEl ->
+            val seasonId = seasonEl.attr("data-id").ifBlank { return@amapIndexed }
             val epDocs = app.get("$mainUrl/ajax/v2/season/episodes/$seasonId").document
                 .select("ul > li > a")
 
@@ -431,4 +431,87 @@ val savedPlaylists = loadPlaylistsFromPrefs(context)
 savedPlaylists.forEach { playlist ->
     registerMainAPI(CustomPlaylistProvider(playlist.name, playlist.url))
 }
+```
+
+---
+
+## 11. Built-in Core Utilities: JsUnpacker, Link Unshortener & ReCAPTCHA
+
+CloudStream's core library includes high-performance built-in tools that eliminate the need for external dependencies.
+
+### Built-in `JsUnpacker`
+Unpack standard Dean Edwards `eval(function(p,a,c,k,e,d)...)` obfuscated scripts:
+```kotlin
+import com.lagradost.cloudstream3.utils.JsUnpacker
+
+val scriptText = doc.selectFirst("script:containsData(eval(function(p,a,c,k,e,d))")?.data() ?: ""
+val unpackedHtmlOrJs = JsUnpacker(scriptText).unpack()
+```
+
+### Built-in Link Unshortener
+Unshortens `bit.ly`, `tinyurl`, and other shortlink services automatically:
+```kotlin
+import com.lagradost.cloudstream3.utils.unshortenLinkSafe
+
+val destinationUrl = unshortenLinkSafe(shortUrl)
+```
+
+### Built-in Invisible ReCAPTCHA Token Fetcher
+Fetches tokens without needing a WebView:
+```kotlin
+import com.lagradost.cloudstream3.APIHolder
+
+val siteKey = "6Le-wvkSAAAAAPBZ..."
+val token = APIHolder.getCaptchaToken(url = mainUrl, key = siteKey, referer = mainUrl)
+```
+
+---
+
+## 12. Non-blocking Coroutines (`amap`, `amapIndexed`, `runAllAsync`)
+
+> [!WARNING]
+> Never use `apmap` or `argamap`. They block threads with `runBlocking` and trigger `DeprecationLevel.ERROR` in current CloudStream builds.
+
+Always use the non-blocking concurrent collection extensions:
+- `list.amap { item -> app.get(item.url) }` — Concurrent async map
+- `list.amapIndexed { idx, item -> ... }` — Concurrent async map with index
+- `runAllAsync({ task1() }, { task2() })` — Run multiple independent fetch jobs concurrently
+
+---
+
+## 13. Advanced ExoPlayer & Sync Integrations
+
+### OkHttp Video Interceptor for Stream Playback
+If a video host requires dynamic headers, tokens, or cookies during ExoPlayer playback:
+```kotlin
+override fun getVideoInterceptor(extractorLink: ExtractorLink): Interceptor {
+    return Interceptor { chain ->
+        val original = chain.request()
+        val request = original.newBuilder()
+            .header("User-Agent", USER_AGENT)
+            .header("Referer", "$mainUrl/")
+            .build()
+        chain.proceed(request)
+    }
+}
+```
+
+### Sync Services Deep-linking (IMDb / MyAnimeList)
+Allow CloudStream users to jump directly into your provider from their IMDb bookmarks:
+```kotlin
+override val supportedSyncNames = setOf(SyncIdName.Imdb)
+
+override suspend fun getLoadUrl(name: SyncIdName, id: String): String {
+    return when (name) {
+        SyncIdName.Imdb -> "$mainUrl/imdb/$id"
+        else -> ""
+    }
+}
+```
+
+### Rate-Limiting & Anti-DDoS Prevention
+If a site returns HTTP 429 or Cloudflare challenges when multiple homepage rows load simultaneously:
+```kotlin
+override var sequentialMainPage = true         // Loads rows one after another
+override var sequentialMainPageDelay = 500L     // Delay between rows in ms
 ```
