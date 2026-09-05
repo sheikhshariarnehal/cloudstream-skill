@@ -61,7 +61,20 @@ subprojects {
         defaultConfig {
             minSdk = 21
             compileSdkVersion(35)
-            targetSdk = 35
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+
+        tasks.withType<KotlinJvmCompile> {
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_1_8)
+                freeCompilerArgs.addAll(
+                    "-Xno-call-assertions",
+                    "-Xno-param-assertions",
+                    "-Xno-receiver-assertions"
+                )
+            }
         }
     }
 
@@ -70,10 +83,14 @@ subprojects {
         cloudstream("com.lagradost:cloudstream3:pre-release") // stubs for all CloudStream classes
 
         implementation(kotlin("stdlib"))
-        implementation("com.github.Blatzar:NiceHttp:0.4.11")   // HTTP client
-        implementation("org.jsoup:jsoup:1.18.3")                // HTML parser
-        // Do NOT bump Jackson past 2.13.1 — newer versions break on older Android devices.
+        implementation("com.github.Blatzar:NiceHttp:0.4.16")   // HTTP client with session/cookie support
+        implementation("org.jsoup:jsoup:1.22.1")                // HTML parser
+        // Jackson: pin to 2.13.1 (or up to 2.20.1 if using current pre-release)
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
+        // Optional production libraries:
+        implementation("org.mozilla:rhino:1.9.0")               // In-app JS engine for unpacking eval scripts
+        implementation("me.xdrop:fuzzywuzzy:1.4.0")             // Fuzzy search string ranking
+        implementation("org.bouncycastle:bcpkix-jdk15on:1.70")  // AES/DES/cipher cryptography
     }
 }
 ```

@@ -250,4 +250,10 @@ trailing builder lambda — passing them as named constructor parameters is a co
 | Episode builder | `newEpisode(dataOrUrl) { this.name = title; this.season = s; this.episode = ep }` |
 | ExtractorLink builder | `newExtractorLink(source, name, url, ExtractorLinkType.M3U8) { this.referer = ref; this.quality = Qualities.Unknown.value }` |
 | Auto-extract embed | `loadExtractor(embedUrl, referer, subtitleCallback, callback)` |
-| Parse JSON | `val data = parseJson<MyDataClass>(jsonString)` or `app.get(url).parsed<MyDataClass>()` |
+| Parse JSON | `val data = parseJson<MyDataClass>(jsonString)` or `app.get(url).parsed<MyDataClass>()` |
+| Live TV / Event | `newLiveSearchResponse(name, url, TvType.Live)` / `newLiveStreamLoadResponse(name, url, dataUrl)` |
+| ClearKey DRM DASH | `newDrmExtractorLink(name, name, mpdUrl, ExtractorLinkType.DASH, CLEARKEY_UUID, "oct", kidB64Url, keyB64Url)` |
+| Anime Dub/Sub | `newAnimeSearchResponse(name, url, TvType.Anime) { addDubStatus(dubExist = true, dubEpisodes = d, subExist = true, subEpisodes = s) }` |
+| Backdrops & Extras | `this.backgroundPosterUrl = backdrop; addActors(listOf("...")); addTrailer(trailerUrl)` |
+| Plugin Settings UI | Subclass `Plugin()` and configure `openSettings = { ... }` with a `BottomSheetDialogFragment` |
+

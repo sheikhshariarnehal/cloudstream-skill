@@ -275,3 +275,160 @@ class MyHostExtractor : ExtractorApi() {
 Prefer `parsedSafe<T>()` (returns null on failure) over `parsed<T>()` inside extractors, since a
 single host's API hiccup shouldn't crash the whole `loadLinks` call for every other server on the
 page.
+
+---
+
+## 7. Live TV, Sports & IPTV Streaming (with ClearKey DRM)
+
+For 24/7 channels, sports matches, or IPTV streams, use `TvType.Live`, `newLiveSearchResponse`, and `newLiveStreamLoadResponse`.
+
+### Pattern: Live Stream Search & Load
+```kotlin
+override val supportedTypes = setOf(TvType.Live)
+
+// In search or getMainPage:
+newLiveSearchResponse(
+    name = matchTitle,
+    url = loadData.toJson(),
+    type = TvType.Live
+) {
+    this.posterUrl = poster
+}
+
+// In load():
+override suspend fun load(url: String): LoadResponse {
+    val data = parseJson<MyEventData>(url)
+    return newLiveStreamLoadResponse(name = data.title, url = url, dataUrl = url) {
+        this.posterUrl = data.poster
+        this.plot = "Kickoff: ${data.startTime}\nServers: ${data.servers.size}"
+    }
+}
+```
+
+### Pattern: MPEG-DASH (.mpd) with ClearKey DRM
+If the stream is encrypted with ClearKey DRM (e.g. key ID and hex key provided by an API):
+```kotlin
+import com.lagradost.cloudstream3.utils.CLEARKEY_UUID
+import com.lagradost.cloudstream3.utils.newDrmExtractorLink
+import android.util.Base64
+
+fun hexToBase64Url(hex: String): String =
+    Base64.encodeToString(hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+
+callback(
+    newDrmExtractorLink(
+        source = "Live Server",
+        name = "Stream 1 (1080p)",
+        url = mpdUrl,
+        type = ExtractorLinkType.DASH,
+        uuid = CLEARKEY_UUID,
+        kty = "oct",
+        keyId = hexToBase64Url(kidHex),
+        key = hexToBase64Url(keyHex)
+    ) {
+        this.headers = mapOf("User-Agent" to "...", "Referer" to "...")
+    }
+)
+```
+
+### Pattern: Header-piped URLs in loadLinks
+Many providers encode headers directly into link strings (e.g. `https://stream.example/live.m3u8|User-Agent=...&Referer=...`):
+```kotlin
+val parts = streamUrl.split("|", limit = 2)
+val cleanUrl = parts[0].trim()
+val headersMap = mutableMapOf<String, String>()
+if (parts.size > 1) {
+    parts[1].split("&").forEach { kv ->
+        val (k, v) = kv.split("=", limit = 2)
+        headersMap[k.trim()] = v.trim()
+    }
+}
+
+callback(
+    newExtractorLink(name, name, cleanUrl, ExtractorLinkType.M3U8) {
+        this.headers = headersMap
+    }
+)
+```
+
+---
+
+## 8. Anime Providers with Dub/Sub Status Tracking
+
+Anime sites distinguish between Subtitled and Dubbed episodes. Use `newAnimeSearchResponse` and `addDubStatus`:
+
+```kotlin
+newAnimeSearchResponse(title, href, TvType.Anime) {
+    this.posterUrl = posterUrl
+    addDubStatus(
+        dubExist = dubEpisodeCount != null,
+        dubEpisodes = dubEpisodeCount,
+        subExist = subEpisodeCount != null,
+        subEpisodes = subEpisodeCount
+    )
+}
+```
+
+---
+
+## 9. Rich Metadata: Backdrops, Trailers, Actors, Duration, and Tags
+
+CloudStream's detail view supports rich metadata extensions via companion helpers:
+
+```kotlin
+import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
+import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
+
+return newMovieLoadResponse(title, url, TvType.Movie, url) {
+    this.posterUrl = posterUrl
+    this.backgroundPosterUrl = backdropCoverUrl   // Wide banner behind details
+    this.plot = synopsis
+    this.year = year
+    this.duration = durationInMinutes             // Integer in minutes
+    this.tags = listOf("Action", "Sci-Fi")        // Genre chips
+    addActors(listOf("Cillian Murphy", "Emily Blunt"))
+    addTrailer(youtubeTrailerUrl)
+}
+```
+
+---
+
+## 10. In-App Provider Settings & Dynamic Providers (`openSettings`)
+
+Providers can present their own settings dialog (e.g. using `BottomSheetDialogFragment`) directly within CloudStream by extending `Plugin()`:
+
+```kotlin
+package com.example
+
+import android.content.Context
+import androidx.appcompat.app.AppCompatActivity
+import com.lagradost.cloudstream3.plugins.Plugin
+import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+
+@CloudstreamPlugin
+class MySitePlugin : Plugin() {
+    override fun load(context: Context) {
+        // 1. Pass Android application context to provider if needed
+        MySiteProvider.appContext = context
+        registerMainAPI(MySiteProvider())
+
+        // 2. Open custom configuration sheet from CloudStream plugin screen:
+        val activity = context as? AppCompatActivity
+        openSettings = {
+            if (activity != null) {
+                val dialog = MySettingsBottomSheet(context)
+                dialog.show(activity.supportFragmentManager, "MySiteSettings")
+            }
+        }
+    }
+}
+```
+
+### Dynamic Multi-Provider Registration
+You can register multiple `MainAPI` instances dynamically (e.g., one for each user-configured playlist or category):
+```kotlin
+val savedPlaylists = loadPlaylistsFromPrefs(context)
+savedPlaylists.forEach { playlist ->
+    registerMainAPI(CustomPlaylistProvider(playlist.name, playlist.url))
+}
+```

@@ -170,3 +170,63 @@ The general procedure:
 Reference walkthrough with screenshots (iframe hunting on Gogoanime-style sites, following a
 redirector to the origin mp4 host):
 https://recloudstream.github.io/csdocs/devs/scraping/finding_video_links/
+
+---
+
+## 6. Executing Obfuscated JavaScript with Rhino
+
+When sites protect video URLs using complex client-side JS packers (e.g. `eval(function(p,a,c,k,e,d)...)`), instead of manually rewriting the deobfuscation logic, execute the script directly using Mozilla Rhino:
+
+```kotlin
+import org.mozilla.javascript.Context
+import org.mozilla.javascript.Scriptable
+
+fun evaluateJs(packedJs: String): String {
+    val rhino = Context.enter()
+    rhino.optimizationLevel = -1 // Required for Android (no dynamic bytecode gen)
+    return try {
+        val scope: Scriptable = rhino.initSafeStandardObjects()
+        // Run the script and extract the resolved string/URL:
+        val result = rhino.evaluateString(scope, packedJs, "JavaScript", 1, null)
+        Context.toString(result)
+    } finally {
+        Context.exit()
+    }
+}
+```
+
+---
+
+## 7. Cryptographic Decryption Patterns in Kotlin
+
+Many streaming APIs return AES or DES encrypted JSON payloads.
+
+### Pattern: Standard AES-CBC Decryption
+```kotlin
+import android.util.Base64
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
+
+fun decryptAesCbc(base64Ciphertext: String, keyBytes: ByteArray, ivBytes: ByteArray): String? {
+    return try {
+        val ct = Base64.decode(base64Ciphertext.trim(), Base64.DEFAULT)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(keyBytes, "AES"), IvParameterSpec(ivBytes))
+        String(cipher.doFinal(ct), Charsets.UTF_8)
+    } catch (e: Exception) {
+        null
+    }
+}
+```
+
+### Pattern: Fast Fuzzy Matching for Site Searches
+When a site's search returns imprecise results, re-rank and filter using `fuzzywuzzy`:
+```kotlin
+import me.xdrop.fuzzywuzzy.FuzzySearch
+
+val matchingItems = allScrapedItems.filter { item ->
+    val score = FuzzySearch.partialRatio(query.lowercase(), item.name.lowercase())
+    score > 70
+}
+```
