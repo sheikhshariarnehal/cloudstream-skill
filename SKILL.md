@@ -15,6 +15,10 @@ triggers:
   - provider
   - add provider
   - new provider
+  - /optimize
+  - optimize
+  - optimize provider
+  - audit provider
   - cloudstream
   - cloudstream provider
   - cloudstream plugin
@@ -52,6 +56,17 @@ When the user types `/provider <website_url>`, gives a target streaming site wit
 2. **Phase 2 — Architecture Mapping**: Determine the provider name (`<SiteName>Provider`), package (`com.<sitename>`), content types (`TvType.Movie`, `TvType.TvSeries`), and extractor strategy.
 3. **Phase 3 — Implementation**: Scaffold `<SiteName>Provider/build.gradle.kts`, `<SiteName>Provider.kt` implementing `search`, `getMainPage`, `load`, and `loadLinks`, and `<SiteName>Plugin.kt` entry point.
 4. **Phase 4 — Verification**: Check Gradle build readiness (`./gradlew <SiteName>Provider:make`) and present testing steps.
+
+## Slash Command: `/optimize`
+
+When the user types `/optimize`, asks to audit, or optimize a provider repository, execute the 6-pillar analysis workflow in **[`workflows/optimize-provider.md`](workflows/optimize-provider.md)**:
+
+1. **Threading & Coroutine Safety**: Detect and eliminate blocking calls (`apmap`, `apmapIndexed`, `runBlocking`) in favor of non-blocking `amap`/`amapIndexed` to avoid UI freezes.
+2. **Network & Anti-Throttling**: Add intelligent caching (`cacheTime = 60`), request timeouts (`timeout = 30`), and enable `sequentialMainPage = true` for Cloudflare-protected sites.
+3. **UI Polish & Rich Metadata**: Enhance detail screens with `backgroundPosterUrl`, `addActors`, `addTrailer`, `duration`, `tags`, `addDubStatus` for Anime, and enable infinite scrolling (`hasNext = true`).
+4. **Playback & Multi-Quality**: Validate `newExtractorLink` builder lambdas, ensure multi-resolution options (1080p, 720p, 480p), parse stream headers, and configure `getVideoInterceptor` if ExoPlayer needs CDN cookies.
+5. **Crash Prevention (Zero NPEs)**: Replace brittle unwrap assertions (`!!`) with safe calls, convert `.toInt()` to `.toIntOrNull()`, and wrap API parsing in `parsedSafe<T>()`.
+6. **Gradle & Manifest Verification**: Check `language` codes, remove invalid `apiVersion` flags, verify JVM target 1.8, and pin dependencies.
 
 ---
 
