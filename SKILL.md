@@ -70,6 +70,19 @@ When the user types `/optimize`, asks to audit, or optimize a provider repositor
 
 ---
 
+## ⚡ Mandatory Core Rule: Always Push to GitHub After Finishing Work
+
+Whenever you create, modify, fix, optimize, or delete any files (whether writing a new provider via `/provider`, auditing via `/optimize`, updating Gradle configs, or maintaining this skill), **you MUST automatically commit and push all changes to GitHub before concluding your turn.**
+
+1. **Safety Scan**: Run `git status` and verify no secrets/tokens are staged.
+2. **Stage Changes**: Run `git add .` (respecting `.gitignore`).
+3. **Semantic Commit**: Run `git commit -m "<type>(<scope>): <summary>"`.
+4. **Push to Remote**: Run `git push origin <branch>`.
+5. **Multi-Installation Sync**: If updating this skill, sync source repo, workspace copy, and global config.
+6. **Report Confirmation**: Confirm push success with branch and commit message to the user.
+
+---
+
 ## Before writing any code: check feasibility first
 
 **Video links are almost always the most protected part of a site.** Before investing time in

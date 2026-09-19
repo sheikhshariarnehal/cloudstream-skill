@@ -30,6 +30,9 @@ When activated, your Antigravity agent is equipped with deep domain knowledge of
 ├── workflows/
 │   ├── add-provider.md               # Step-by-step workflow triggered by /provider <url>
 │   └── optimize-provider.md          # 6-pillar repository audit triggered by /optimize
+├── rules/
+│   ├── auto-push-github.md           # Mandatory rule to always commit & push after finishing work
+│   └── provider-version-bump.md      # Auto-version bumping & changelog maintenance rule
 └── references/
     ├── project-setup.md              # Template fork, Gradle files, repo.json/plugins.json & CI
     ├── provider-cookbook.md          # Real-world implementations of all provider methods
@@ -41,8 +44,9 @@ When activated, your Antigravity agent is equipped with deep domain knowledge of
 | Document | Description |
 |---|---|
 | [`SKILL.md`](SKILL.md) | The core instructions and progressive disclosure entry point loaded by Antigravity. |
-| [`workflows/add-provider.md`](workflows/add-provider.md) | **Automated workflow for `/provider <url>`**: executes site reconnaissance, CloudStream architecture mapping, provider scaffolding, and compilation checks. |
-| [`workflows/optimize-provider.md`](workflows/optimize-provider.md) | **Automated audit for `/optimize`**: 6-pillar deep scan for thread safety, anti-rate-limiting, UI polish, multi-quality playback, crash prevention, and Gradle integrity. |
+| [`rules/auto-push-github.md`](rules/auto-push-github.md) | **Automatic GitHub Push Rule**: Mandates committing and pushing all modified/created code to GitHub before finishing any turn. |
+| [`workflows/add-provider.md`](workflows/add-provider.md) | **Automated workflow for `/provider <url>`**: executes site reconnaissance, CloudStream architecture mapping, provider scaffolding, compilation checks, and GitHub push. |
+| [`workflows/optimize-provider.md`](workflows/optimize-provider.md) | **Automated audit for `/optimize`**: 6-pillar deep scan for thread safety, anti-rate-limiting, UI polish, multi-quality playback, crash prevention, Gradle integrity, and GitHub push. |
 | [`references/project-setup.md`](references/project-setup.md) | Complete guide to configuring `TestPlugins`, root/plugin `build.gradle.kts`, distribution manifests (`repo.json` / `plugins.json`), and CI gotchas. |
 | [`references/provider-cookbook.md`](references/provider-cookbook.md) | Step-by-step cookbook patterns for Movies, TV Series, pagination, JSON payload caching, and custom extractors. |
 | [`references/scraping-guide.md`](references/scraping-guide.md) | Practical guide to extracting playable streams: hunting iframes, reversing obfuscation (Base64/AES), and handling headers. |

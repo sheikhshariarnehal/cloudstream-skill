@@ -77,3 +77,9 @@ When `/optimize` is called:
 3. **Generate Audit Report**: Present a clear table of detected issues (High / Medium / Low severity) with exact file links and line numbers.
 4. **Propose Automated Fixes**: Provide clean diffs/code updates for identified issues.
 5. **Compile & Verify**: Run `./gradlew <module>:make` to verify that optimizations build cleanly without regressions.
+6. **Automatic GitHub Commit & Push**:
+   - Run `git status` to verify staged changes.
+   - Run `git add .` to stage all optimizations and fixes.
+   - Run `git commit -m "perf(<module>): apply coroutine, anti-rate-limit, and UI optimizations"`.
+   - Run `git push origin <branch>`.
+   - Report commit message and push status in the final summary.

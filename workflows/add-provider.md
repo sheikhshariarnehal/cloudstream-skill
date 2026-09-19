@@ -166,3 +166,15 @@ Report:
 1. Site analysis findings (search endpoint, detail page selectors, video host embed).
 2. Created files and directories.
 3. How to build and test locally (`./gradlew <ModuleName>:make` or `deployWithAdb`).
+
+---
+
+## Phase 5 — Automatic GitHub Commit & Push
+
+Before concluding your turn, automatically commit and push all newly created or modified provider files to GitHub:
+
+1. **Safety Check**: Run `git status` to verify modified files and confirm no credentials or secret keys are staged.
+2. **Stage Changes**: `git add .`
+3. **Commit**: `git commit -m "feat(<SiteName>): add <SiteName> provider and plugin"`
+4. **Push**: `git push origin <branch>`
+5. **Confirm**: Provide the commit hash and remote push confirmation in your final message.
