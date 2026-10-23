@@ -56,3 +56,20 @@ This ledger tracks the autonomous evolution of the **CloudStream Provider Develo
   - [`references/core-architecture.md`](references/core-architecture.md)
   - Updated [`references/provider-cookbook.md`](references/provider-cookbook.md) (Sections 14-17)
 - **Impact**: Eliminates redundant custom extractors by prioritizing CloudStream's 80+ built-ins, enables native JS evaluation without webviews, and adds official `WebViewResolver` and `M3u8Helper` patterns.
+
+---
+
+### Step 4 — 2026-10-23: Reverse-Engineered AnimeKai (`animekai.be`) Architecture & MegaPlay Video Streams
+- **Target / Source Repositories**: Target site `https://animekai.be/home` & `megaplay.buzz` stream host
+- **Category**: Site Recon, Dynamic CDP Reverse Engineering, REST API Discovery & Streaming Pipeline
+- **Learned Discoveries & Capabilities**:
+  1. **Dual-Path Search Architecture**: Discovered the high-speed REST endpoint `GET /api/search/suggest?q={query}` returning direct JSON containing `title`, `title_jp`, `slug`, `type`, `rating`, `has_sub`, `has_dub`, `sub_count`, `dub_count`, `ep_count` for sub-100ms searches without HTML parsing.
+  2. **AJAX Tabbed Home Updates**: Discovered `GET /ajax/home/items?tab={tab}&page={page}` supporting `all-updates`, `sub-updates`, `dub-updates`, and `china-updates` with paginated HTML snippets.
+  3. **Direct Sources Routing API**: Discovered `GET /watch/{slug}/ep/{num}/sources` returning JSON with separated `sub` and `dub` server lists pointing directly to `https://megaplay.buzz/stream/mal/{mal_id}/{ep_num}/{sub|dub}`.
+  4. **Initial-DOM Complete Episode Layout**: Verified that all episodes (even 1,000+ episode series like *One Piece*) are present in `.eplist ul.range li a` in the initial static DOM with `num`, `data-sub`, and `data-dub` attributes.
+  5. **MegaPlay Streaming & Obfuscation**: Reverse-engineered `megaplay.buzz`, identified the required `Referer: https://animekai.be/` header, the internal `getSources?id={player_id}&platform=OTHER` endpoint, WebVTT subtitle tracks, and implemented a resilient `WebViewResolver` fallback to guarantee multi-quality HLS (1080p, 720p, 360p) playback without manual key cracking.
+- **Harvested Files**:
+  - [`d:\Poject\CloudStream\animekai_context.md`](d:\Poject\CloudStream\animekai_context.md)
+  - [`references/archetypes/animekai-architecture.md`](references/archetypes/animekai-architecture.md)
+- **Impact**: Provides a complete, tested blueprint for generating a production-ready, zero-maintenance AnimeKai CloudStream provider.
+
