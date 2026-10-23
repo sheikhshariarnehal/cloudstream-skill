@@ -45,11 +45,14 @@ Equipped with an **Autonomous Self-Learning Engine** that mines technical discov
     │   ├── VolcEngineExtractor.kt    # ByteDance / VolcEngine short-drama VOD extractor
     │   ├── AWSStreamExtractor.kt     # AWSStream / Zephyrflick / Ravok multi-host extractor
     │   ├── UpnsPlayerExtractor.kt    # Upns / Packed JS M3U8 stream extractor
-    │   └── GDMirrorExtractor.kt      # Google Drive & fast CDN direct link extractor
+    │   ├── GDMirrorExtractor.kt      # Google Drive & fast CDN direct link extractor
+    │   └── HubCloudExtractor.kt      # HubCloud / BuzzServer / PixelDrain / S3 resolver
     ├── archetypes/                   # Architectural blueprints for common streaming platforms
     │   ├── short-drama-api.md        # Vertical mobile OTT short-drama REST API pattern
     │   ├── anime-multiserver.md      # Multi-server, Dub/Sub anime aggregator pattern
-    │   └── bdix-ftp-portal.md        # High-speed local ISP/FTP direct stream pattern
+    │   ├── bdix-ftp-portal.md        # High-speed local ISP/FTP direct stream pattern
+    │   ├── iptv-m3u-player.md        # IPTV playlist & ClearKey DRM DASH streaming pattern
+    │   └── live-sports-events.md     # Live sports matches, countdowns & AES-CBC decryptor
     ├── project-setup.md              # Template fork, Gradle files, repo.json/plugins.json & CI
     ├── provider-cookbook.md          # Real-world implementations of all provider methods
     └── scraping-guide.md             # Reverse-engineering video hosts, selectors, regex & sniffing

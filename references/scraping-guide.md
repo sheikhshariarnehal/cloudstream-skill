@@ -230,3 +230,73 @@ val matchingItems = allScrapedItems.filter { item ->
     score > 70
 }
 ```
+
+---
+
+## 8. Advanced De-Obfuscation & DRM Streaming Patterns
+
+### Pattern: Base64 Permutation Junk Stripping (HDrezka Style)
+Some platforms inject combinations of special characters (`@`, `#`, `!`, `^`, `$`), base64 encode them, and inject them into stream strings to break naive scrapers:
+```kotlin
+fun cleanTrashStream(data: String): String {
+    fun getTrash(arr: List<String>, count: Int): List<String> {
+        val trash = ArrayList<List<String>>()
+        for (i in 1..count) trash.add(arr)
+        return trash.reduce { acc, list ->
+            val temp = ArrayList<String>()
+            acc.forEach { a -> list.forEach { b -> temp.add(a + b) } }
+            temp
+        }
+    }
+
+    val trashList = listOf("@", "#", "!", "^", "$")
+    val trashSet = getTrash(trashList, 2) + getTrash(trashList, 3)
+    var cleaned = data.replace("#h", "").split("//_//").joinToString("")
+
+    trashSet.forEach { junk ->
+        val encodedJunk = base64Encode(junk.toByteArray())
+        cleaned = cleaned.replace(encodedJunk, "")
+    }
+
+    return base64Decode(cleaned)
+}
+```
+
+### Pattern: ClearKey DRM DASH Playback
+When streams are protected with ClearKey DRM (e.g. live sports, IPTV, or broadcaster feeds):
+```kotlin
+import com.lagradost.cloudstream3.utils.newDrmExtractorLink
+import com.lagradost.cloudstream3.utils.CLEARKEY_UUID
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+
+callback.invoke(
+    newDrmExtractorLink(
+        source = name,
+        name = "$name HD",
+        url = mpdManifestUrl,
+        type = ExtractorLinkType.DASH,
+        uuid = CLEARKEY_UUID,
+        kty = "oct",
+        kid = keyIdHexOrBase64,
+        key = keyHexOrBase64
+    )
+)
+```
+
+### Pattern: ExoPlayer Header Replacement Interceptor
+When CDNs block requests missing custom User-Agent, Referer, or Authorization headers during playback:
+```kotlin
+import okhttp3.Interceptor
+import okhttp3.Response
+
+override fun getVideoInterceptor(extractorLink: ExtractorLink): Interceptor {
+    return Interceptor { chain ->
+        val request = chain.request().newBuilder()
+            .header("User-Agent", "Mozilla/5.0 ...")
+            .header("Referer", "$mainUrl/")
+            .header("Origin", mainUrl)
+            .build()
+        chain.proceed(request)
+    }
+}
+```

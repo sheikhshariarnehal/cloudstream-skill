@@ -21,3 +21,21 @@ This ledger tracks the autonomous evolution of the **CloudStream Provider Develo
   - [`references/archetypes/anime-multiserver.md`](references/archetypes/anime-multiserver.md)
   - [`references/archetypes/bdix-ftp-portal.md`](references/archetypes/bdix-ftp-portal.md)
 - **Impact**: All future provider requests can immediately instantiate VolcEngine, AWSStream, Upns, or GDMirror extractors without reverse-engineering from scratch.
+
+---
+
+### Step 2 — 2026-10-23: Harvest CNCVerse Ecosystem (HubCloud, IPTV M3U, DRM ClearKey, Live Sports & HDrezka De-obfuscation)
+- **Target / Source Repositories**: `CNCVerse-Cloud-Stream-Extension` (`MLSBDProvider`, `M3UPlaylistPlayerProvider`, `CricifyProvider`, `HDrezkaProvider`, `BilibiliProvider`)
+- **Category**: Extractors, IPTV & Live Sports Archetypes, Advanced De-obfuscation
+- **Learned Discoveries & Capabilities**:
+  1. **HubCloud Multi-Mirror Resolver**: Reusable extractor resolving BuzzServer (`HX-Redirect`), PixelDrain (`/api/file/{id}?download`), FSL Server, S3, and FSLv2 CDNs.
+  2. **IPTV & M3U Playlist Player Archetype**: Full parser for `#EXTM3U`, `#EXTINF`, `#EXTVLCOPT:http-user-agent`, and `#EXTVLCOPT:http-referrer` tags with live category carousels.
+  3. **ClearKey DRM DASH Playback**: Support for `newDrmExtractorLink` with `CLEARKEY_UUID`, `oct` key format, and license server kid/k key mapping.
+  4. **Live Sports & AES-CBC Decrypted Config**: Sports match event state machines (`LIVE` vs `UPCOMING`), multi-audio mirror feeds, and AES-CBC/PKCS5Padding hex key/iv deciphering.
+  5. **Base64 Permutation Junk Stripping**: De-obfuscation algorithm (HDrezka style) that generates combinatorial permutations of junk characters (`@`, `#`, `!`, `^`, `$`), base64 encodes them, and strips them from payload streams before base64 decoding.
+- **Harvested Files**:
+  - [`references/extractors/HubCloudExtractor.kt`](references/extractors/HubCloudExtractor.kt)
+  - [`references/archetypes/iptv-m3u-player.md`](references/archetypes/iptv-m3u-player.md)
+  - [`references/archetypes/live-sports-events.md`](references/archetypes/live-sports-events.md)
+  - Updated [`references/scraping-guide.md`](references/scraping-guide.md) (Section 8: DRM & Permutation Junk Stripping)
+- **Impact**: The agent can now instantly generate production-ready IPTV playlist providers, live sports event aggregators, ClearKey DRM stream links, and HubCloud-protected stream resolvers.

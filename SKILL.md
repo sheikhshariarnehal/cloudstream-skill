@@ -100,8 +100,8 @@ This skill is designed to train itself 1 step further every single time you work
 ```
 
 ### Knowledge Repositories:
-- **Modular Extractors Library**: Standalone Kotlin files in [`references/extractors/`](references/extractors/) (`VolcEngineExtractor.kt`, `AWSStreamExtractor.kt`, `UpnsPlayerExtractor.kt`, `GDMirrorExtractor.kt`).
-- **Site Archetypes Library**: Blueprints for common platforms in [`references/archetypes/`](references/archetypes/) (`short-drama-api.md`, `anime-multiserver.md`, `bdix-ftp-portal.md`).
+- **Modular Extractors Library**: Standalone Kotlin files in [`references/extractors/`](references/extractors/) (`VolcEngineExtractor.kt`, `AWSStreamExtractor.kt`, `UpnsPlayerExtractor.kt`, `GDMirrorExtractor.kt`, `HubCloudExtractor.kt`).
+- **Site Archetypes Library**: Blueprints for common platforms in [`references/archetypes/`](references/archetypes/) (`short-drama-api.md`, `anime-multiserver.md`, `bdix-ftp-portal.md`, `iptv-m3u-player.md`, `live-sports-events.md`).
 - **Master Evolution Ledger**: Complete historical record in [`LEARNING_LOG.md`](LEARNING_LOG.md).
 
 ---
