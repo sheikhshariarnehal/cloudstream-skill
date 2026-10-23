@@ -514,4 +514,109 @@ If a site returns HTTP 429 or Cloudflare challenges when multiple homepage rows 
 ```kotlin
 override var sequentialMainPage = true         // Loads rows one after another
 override var sequentialMainPageDelay = 500L     // Delay between rows in ms
+
+---
+
+## 14. Automated HLS Master Resolution (`M3u8Helper.generateM3u8`)
+
+Instead of writing manual regex for `#EXT-X-STREAM-INF` resolutions, use the core library's `M3u8Helper`:
+
+```kotlin
+import com.lagradost.cloudstream3.utils.M3u8Helper
+
+override suspend fun loadLinks(
+    data: String,
+    isCasting: Boolean,
+    subtitleCallback: (SubtitleFile) -> Unit,
+    callback: (ExtractorLink) -> Unit
+): Boolean {
+    val masterM3u8Url = "https://cdn.example.com/stream/master.m3u8"
+    
+    // Parses all stream variants (1080p, 720p, 480p, 360p) and emits ExtractorLinks
+    val links = M3u8Helper.generateM3u8(
+        source = name,
+        streamUrl = masterM3u8Url,
+        referer = mainUrl,
+        headers = mapOf("Origin" to mainUrl)
+    )
+    
+    links.forEach { link -> callback(link) }
+    return links.isNotEmpty()
+}
+```
+
+---
+
+## 15. Executing Obfuscated JavaScript Natively (`JsInterpreter` & `JsHunter`)
+
+CloudStream provides built-in tools to evaluate JS expressions and dehunt obfuscated scripts without WebViews:
+
+### Native JS Execution (`JsInterpreter`)
+```kotlin
+import com.lagradost.cloudstream3.utils.JsInterpreter
+
+val script = doc.selectFirst("script:containsData(var _key)")?.data() ?: ""
+val token = JsInterpreter.evalJs(script, variable = "_key")?.toString()
+```
+
+### Dehunting `eval(function(h,u,n,t,e,r))` Obfuscation (`JsHunter`)
+```kotlin
+import com.lagradost.cloudstream3.utils.JsHunter
+
+val script = doc.selectFirst("script:containsData(function(h,u,n,t,e,r))")?.data() ?: ""
+val hunter = JsHunter(script)
+if (hunter.detect()) {
+    val unhuntedJs = hunter.dehunt()
+    // Extract stream url from unhuntedJs
+}
+```
+
+---
+
+## 16. Cloudflare & Browser Challenges (`WebViewResolver`)
+
+For sites protected by Cloudflare Turnstile or anti-scraping scripts:
+
+```kotlin
+import com.lagradost.cloudstream3.network.WebViewResolver
+
+override val usesWebView = true
+
+override suspend fun loadLinks(
+    data: String,
+    isCasting: Boolean,
+    subtitleCallback: (SubtitleFile) -> Unit,
+    callback: (ExtractorLink) -> Unit
+): Boolean {
+    // Intercept until target stream request fires
+    val resolver = WebViewResolver(
+        interceptUrl = Regex("""/player/get_stream\?id="""),
+        additionalUrls = listOf(Regex("""\.m3u8""")),
+        useOkhttp = false
+    )
+    
+    val response = app.get(data, interceptor = resolver)
+    // Extract stream link from intercepted response
+    return true
+}
+```
+
+---
+
+## 17. Registering Standalone Custom Extractors Globally (`BasePlugin`)
+
+When your plugin implements a custom `ExtractorApi` for a host used across multiple websites:
+
+```kotlin
+@CloudstreamPlugin
+class MyPlugin : BasePlugin() {
+    override fun load() {
+        registerMainAPI(MyProvider())
+        
+        // Expose custom extractor to entire CloudStream app:
+        registerExtractorAPI(MyCustomHostExtractor())
+    }
+}
+```
+
 ```

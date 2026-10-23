@@ -41,6 +41,7 @@ Equipped with an **Autonomous Self-Learning Engine** that mines technical discov
 │   ├── provider-version-bump.md      # Auto-version bumping & changelog maintenance rule
 │   └── auto-push-github.md           # Mandatory rule to always commit & push after finishing work
 └── references/
+    ├── core-architecture.md          # Ground-truth engine: 80+ built-ins, JsInterpreter, M3u8Helper, WebViewResolver
     ├── extractors/                   # Standalone, reusable Kotlin ExtractorApi library
     │   ├── VolcEngineExtractor.kt    # ByteDance / VolcEngine short-drama VOD extractor
     │   ├── AWSStreamExtractor.kt     # AWSStream / Zephyrflick / Ravok multi-host extractor

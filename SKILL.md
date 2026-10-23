@@ -128,6 +128,7 @@ Before claiming any provider or extractor is functional:
 
 ## Reference Documentation (Open as Needed)
 
+- **`references/core-architecture.md`** — Ground-truth CloudStream core engine: built-in extractors catalog (80+ hosts), `JsInterpreter`, `JsHunter`, `M3u8Helper.generateM3u8`, `WebViewResolver`, and `BasePlugin` lifecycle.
 - **`references/extractors/`** — Production-ready Kotlin `ExtractorApi` implementations ready for instant inclusion.
 - **`references/archetypes/`** — End-to-end architecture patterns for Short Dramas, Anime multi-servers, and BDIX FTP portals.
 - **`references/scraping-guide.md`** — Devtools inspection, bypassing bot guards, handling AES/Base64 obfuscation, and header injection.

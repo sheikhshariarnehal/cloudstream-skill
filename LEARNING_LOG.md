@@ -39,3 +39,20 @@ This ledger tracks the autonomous evolution of the **CloudStream Provider Develo
   - [`references/archetypes/live-sports-events.md`](references/archetypes/live-sports-events.md)
   - Updated [`references/scraping-guide.md`](references/scraping-guide.md) (Section 8: DRM & Permutation Junk Stripping)
 - **Impact**: The agent can now instantly generate production-ready IPTV playlist providers, live sports event aggregators, ClearKey DRM stream links, and HubCloud-protected stream resolvers.
+
+---
+
+### Step 3 — 2026-10-23: Upstream CloudStream Core Architecture Integration
+- **Target / Source Repositories**: `upstream` (`recloudstream` core Android app & library codebase)
+- **Category**: Ground-Truth Core Architecture, Built-in Engines, Lifecycle & De-obfuscation
+- **Learned Discoveries & Capabilities**:
+  1. **Built-in Extractor Engine (80+ Hosts)**: The core app already ships with over 80 verified extractors (`StreamWish`, `VidHidePro`, `Filemoon`, `DoodStream`, `Voe`, `StreamTape`, `MixDrop`, `Gofile`, `HubCloud`). Providers should delegate directly via `loadExtractor(url, subtitleCallback, callback)` rather than reimplementing.
+  2. **Native JavaScript Evaluation (`JsInterpreter` & `JsHunter`)**: Discovered the built-in `JsInterpreter.evalJs(code, variable)` native AST parser that runs JavaScript directly in Kotlin without a WebView, and `JsHunter(script).dehunt()` for reversing `eval(function(h,u,n,t,e,r))` obfuscation.
+  3. **Master HLS Playlist Parser (`M3u8Helper.generateM3u8`)**: Built-in utility to automatically fetch master `.m3u8` manifests, parse all bitrate streams, and emit multi-quality `ExtractorLink`s (1080p, 720p, 480p, 360p) with zero custom regex.
+  4. **Headless Android WebView & Turnstile Solver (`WebViewResolver`)**: Built-in OkHttp interceptor supporting regex URL halting (`interceptUrl`), secondary URL sniffing (`additionalUrls`), and Cloudflare Turnstile bypassing with `useOkhttp = false`.
+  5. **Dynamic Global Extractor Registration**: Plugins can expose their custom `ExtractorApi` globally to the entire CloudStream app via `BasePlugin.registerExtractorAPI(extractor)`.
+  6. **Plugin Lifecycle & Manifest Loading**: Documented `PathClassLoader` dynamic loading, `manifest.json` requirements, and `beforeUnload()` cleanup hooks.
+- **Harvested Files**:
+  - [`references/core-architecture.md`](references/core-architecture.md)
+  - Updated [`references/provider-cookbook.md`](references/provider-cookbook.md) (Sections 14-17)
+- **Impact**: Eliminates redundant custom extractors by prioritizing CloudStream's 80+ built-ins, enables native JS evaluation without webviews, and adds official `WebViewResolver` and `M3u8Helper` patterns.
