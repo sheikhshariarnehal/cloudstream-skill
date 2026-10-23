@@ -1,15 +1,12 @@
 ---
 name: cloudstream-provider-dev
 description: >-
-  Build, fix, or extend CloudStream (recloudstream) "providers" — Kotlin plugins
+  Build, fix, heal, or extend CloudStream (recloudstream) "providers" — Kotlin plugins
   that let the CloudStream Android app search, browse, and stream video from a
-  specific website. Use this any time the user wants a CloudStream
-  extension/provider/plugin for a site, mentions MainAPI, ExtractorApi,
-  TestPlugins, plugins.json/repo.json, .cs3 files, or asks for help scraping a
-  streaming site's video links for use in an app — even if they just say "make a
-  cloudstream addon for a given site" with no further detail. Also use it for
-  debugging an existing provider's search/home/load/loadLinks logic or its
-  build.gradle.kts.
+  specific website. Features an autonomous self-learning loop that trains itself
+  from conversation context, captures reusable extractors, bumps versions, and auto-syncs.
+  Use any time the user wants a CloudStream extension/provider/plugin, mentions
+  MainAPI, ExtractorApi, TestPlugins, .cs3 files, or needs to fix/heal an existing provider.
 triggers:
   - /provider
   - provider
@@ -19,6 +16,14 @@ triggers:
   - optimize
   - optimize provider
   - audit provider
+  - /heal
+  - heal
+  - heal provider
+  - /update-provider
+  - update provider
+  - fix provider
+  - /learn
+  - learn
   - cloudstream
   - cloudstream provider
   - cloudstream plugin
@@ -38,9 +43,10 @@ tags:
   - scraping
   - streaming
   - plugin
+  - self-learning
 ---
 
-# CloudStream Provider Development
+# CloudStream Provider Development & Autonomous Self-Learning Skill
 
 CloudStream is an Android streaming app that loads community-written plugins ("providers") at
 runtime. A provider is a Kotlin class that knows how to search a specific site, list its home
@@ -48,226 +54,87 @@ page, load a title's metadata/episodes, and resolve the actual playable video UR
 plugins ship as `.cs3` files (a renamed zip containing `classes.dex` + `manifest.json`) referenced
 from a `plugins.json` that CloudStream fetches from a repo.
 
-## Slash Command: `/provider <url>`
+---
 
-When the user types `/provider <website_url>`, gives a target streaming site with `/provider`, or asks to create a provider for a site, execute the automated 4-phase workflow in **[`workflows/add-provider.md`](workflows/add-provider.md)**:
+## ⚡ Core Slash Commands
 
-1. **Phase 1 — Recon & Stream Feasibility**: Inspect the target site's DOM, test search query parameters, identify home/catalog sections, check detail page metadata/episodes, and crucially locate playable video stream links (`.m3u8`/`.mp4` or supported iframe embeds like StreamTape/Vidcloud/Filemoon).
-2. **Phase 2 — Architecture Mapping**: Determine the provider name (`<SiteName>Provider`), package (`com.<sitename>`), content types (`TvType.Movie`, `TvType.TvSeries`), and extractor strategy.
-3. **Phase 3 — Implementation**: Scaffold `<SiteName>Provider/build.gradle.kts`, `<SiteName>Provider.kt` implementing `search`, `getMainPage`, `load`, and `loadLinks`, and `<SiteName>Plugin.kt` entry point.
-4. **Phase 4 — Verification**: Check Gradle build readiness (`./gradlew <SiteName>Provider:make`) and present testing steps.
+### 1. `/provider <url>` (Create New Provider)
+Executes the automated 4-phase workflow in **[`workflows/add-provider.md`](workflows/add-provider.md)**:
+1. **Phase 1 — Recon & Stream Feasibility**: Test target site DOM, verify playable `.m3u8`/`.mp4` streams return HTTP 200 before writing any code.
+2. **Phase 2 — Architecture Mapping**: Match site to known archetypes in `references/archetypes/` and select extractor strategies.
+3. **Phase 3 — Implementation**: Scaffold `build.gradle.kts`, `Provider.kt` (`search`, `getMainPage`, `load`, `loadLinks`), and `Plugin.kt`.
+4. **Phase 4 — Two-Tier Verification**: Compile via `./gradlew <ProviderName>:make` to generate `.cs3`.
+5. **Phase 5 — Self-Learning & Auto-Push**: Execute `rules/self-learning-loop.md` to persist new discoveries and push to GitHub.
 
-## Slash Command: `/optimize`
+### 2. `/heal <ProviderName>` or `/update-provider` (Fix Broken Provider)
+Executes the diagnosis and repair workflow in **[`workflows/heal-provider.md`](workflows/heal-provider.md)**:
+1. **Diagnose**: Inspect changed site DOM, redirected URLs, or broken stream host embed iframes.
+2. **Repair**: Swap with updated modular extractors from `references/extractors/` or reverse-engineer the new embed.
+3. **Mandatory Version Increment**: Increment integer `version` in `<Provider>/build.gradle.kts` to trigger in-app updates for all CloudStream users.
+4. **Compile & Push**: Verify compilation with `./gradlew <Provider>:make`, commit and push extension repo, and advance skill step.
 
-When the user types `/optimize`, asks to audit, or optimize a provider repository, execute the 6-pillar analysis workflow in **[`workflows/optimize-provider.md`](workflows/optimize-provider.md)**:
+### 3. `/optimize` (6-Pillar Deep Audit)
+Executes the 6-pillar repository audit in **[`workflows/optimize-provider.md`](workflows/optimize-provider.md)**:
+- **Coroutines**: Replace blocking `apmap`/`runBlocking` with non-blocking `amap`.
+- **Anti-Rate-Limiting**: Add `cacheTime = 60`, `timeout = 30`, and `sequentialMainPage = true`.
+- **UI Polish**: Add backdrops, actors, trailers, infinite scrolling, and Anime dub/sub status.
+- **Playback**: Add multi-quality builder lambdas and player headers via `getVideoInterceptor`.
+- **Zero NPEs**: Safe calls (`?.`), `toIntOrNull()`, and `parsedSafe<T>()`.
+- **Gradle Integrity**: Verify JVM 1.8 target, Jackson `2.13.1` pinning, and language tags.
 
-1. **Threading & Coroutine Safety**: Detect and eliminate blocking calls (`apmap`, `apmapIndexed`, `runBlocking`) in favor of non-blocking `amap`/`amapIndexed` to avoid UI freezes.
-2. **Network & Anti-Throttling**: Add intelligent caching (`cacheTime = 60`), request timeouts (`timeout = 30`), and enable `sequentialMainPage = true` for Cloudflare-protected sites.
-3. **UI Polish & Rich Metadata**: Enhance detail screens with `backgroundPosterUrl`, `addActors`, `addTrailer`, `duration`, `tags`, `addDubStatus` for Anime, and enable infinite scrolling (`hasNext = true`).
-4. **Playback & Multi-Quality**: Validate `newExtractorLink` builder lambdas, ensure multi-resolution options (1080p, 720p, 480p), parse stream headers, and configure `getVideoInterceptor` if ExoPlayer needs CDN cookies.
-5. **Crash Prevention (Zero NPEs)**: Replace brittle unwrap assertions (`!!`) with safe calls, convert `.toInt()` to `.toIntOrNull()`, and wrap API parsing in `parsedSafe<T>()`.
-6. **Gradle & Manifest Verification**: Check `language` codes, remove invalid `apiVersion` flags, verify JVM target 1.8, and pin dependencies.
+### 4. `/learn` (Trigger Autonomous Step Advancement)
+Executes the context-mining and persistence protocol in **[`workflows/learn-step.md`](workflows/learn-step.md)**:
+- Scans current turn for new extractors, decryption algorithms, and layout patterns.
+- Saves standalone Kotlin extractors to `references/extractors/`.
+- Appends Step N entry to [`LEARNING_LOG.md`](LEARNING_LOG.md).
+- Increments skill version and executes triple-location sync + GitHub push.
 
 ---
 
-## ⚡ Mandatory Core Rule: Always Push to GitHub After Finishing Work
+## 🧠 Autonomous Continuous Learning Architecture (`rules/self-learning-loop.md`)
 
-Whenever you create, modify, fix, optimize, or delete any files (whether writing a new provider via `/provider`, auditing via `/optimize`, updating Gradle configs, or maintaining this skill), **you MUST automatically commit and push all changes to GitHub before concluding your turn.**
+This skill is designed to train itself 1 step further every single time you work with it:
 
-1. **Safety Scan**: Run `git status` and verify no secrets/tokens are staged.
-2. **Stage Changes**: Run `git add .` (respecting `.gitignore`).
-3. **Semantic Commit**: Run `git commit -m "<type>(<scope>): <summary>"`.
-4. **Push to Remote**: Run `git push origin <branch>`.
-5. **Multi-Installation Sync**: If updating this skill, sync source repo, workspace copy, and global config.
-6. **Report Confirmation**: Confirm push success with branch and commit message to the user.
+```
+[TASK COMPLETED] ──► [MINE CONTEXT] ──► [HARVEST EXTRACTORS] ──► [UPDATE LEARNING_LOG] ──► [TRIPLE SYNC & PUSH]
+```
+
+### Knowledge Repositories:
+- **Modular Extractors Library**: Standalone Kotlin files in [`references/extractors/`](references/extractors/) (`VolcEngineExtractor.kt`, `AWSStreamExtractor.kt`, `UpnsPlayerExtractor.kt`, `GDMirrorExtractor.kt`).
+- **Site Archetypes Library**: Blueprints for common platforms in [`references/archetypes/`](references/archetypes/) (`short-drama-api.md`, `anime-multiserver.md`, `bdix-ftp-portal.md`).
+- **Master Evolution Ledger**: Complete historical record in [`LEARNING_LOG.md`](LEARNING_LOG.md).
 
 ---
 
-## Before writing any code: check feasibility first
+## ⚡ Mandatory Rules Always in Effect
 
-**Video links are almost always the most protected part of a site.** Before investing time in
-search/home-page/metadata scraping, manually trace how the target site's video actually loads
-(dev tools → Network tab, look for `.m3u8`/`.mp4` requests or an iframe embed). If you can't find
-a path to a real video URL, the rest of the provider is useless. See
-`references/scraping-guide.md` for the full technique (iframes, obfuscation, captchas).
+1. **Self-Learning Loop**: Advance the skill 1 step, save reusable extractors, update `LEARNING_LOG.md`, and bump version after every task ([`rules/self-learning-loop.md`](rules/self-learning-loop.md)).
+2. **Provider Version Bump**: Always increment integer `version` in `<Provider>/build.gradle.kts` on any modification ([`rules/provider-version-bump.md`](rules/provider-version-bump.md)).
+3. **Always Push to GitHub**: Commit with semantic conventional messages and push all workspace changes before ending turn ([`rules/auto-push-github.md`](rules/auto-push-github.md)).
 
-## Overall workflow
+---
 
-1. **Get the template.** Fork https://github.com/recloudstream/TestPlugins (includes a working
-   CI setup). In the fork's repo settings: enable `Settings → Actions → General → Allow all
-   actions and reusable workflows`, and give workflows `Read and write permissions`. Create a
-   `builds` branch from `master` before the first CI run (the workflow expects it to exist).
-   Full setup + known first-run gotchas: `references/project-setup.md`.
-2. **Confirm you can get the video link** for at least one episode/movie on the target site (see
-   above). Do this before anything else.
-3. **Create a plugin module**: a new folder at the repo root (e.g. `MySiteProvider/`) containing
-   its own `build.gradle.kts` and `src/main/kotlin/.../MySiteProvider.kt`. `settings.gradle.kts`
-   auto-includes any folder with a `build.gradle.kts`, so no manual registration is needed.
-4. **Write the provider** — a class extending `MainAPI` that implements search, home page, load,
-   and loadLinks (skeleton below; full worked examples in `references/provider-cookbook.md`).
-5. **Register the plugin** with a `@CloudstreamPlugin`-annotated `BasePlugin` subclass (below).
-6. **Set up distribution**: `repo.json` (hand-written once) + `plugins.json` (auto-generated by
-   CI on every push). Details in `references/project-setup.md`.
-7. **Build/test**: `./gradlew MySiteProvider:make` or `./gradlew MySiteProvider:deployWithAdb`
-   (needs a device/emulator with CloudStream installed and "All files access" granted), or just
-   push and let CI produce the `.cs3` in the `builds` branch.
+## Two-Tier Verification Gate
 
-## The four things a provider does
+Before claiming any provider or extractor is functional:
+1. **Tier 1 — Stream Sniffing**: The video stream URL (`.m3u8` or `.mp4`) must be fetched and return HTTP 200 with media content.
+2. **Tier 2 — Gradle Compilation**:
+   ```bash
+   ./gradlew <ProviderName>:make
+   ```
+   Must successfully produce `<ProviderName>.cs3` in `build/` without compilation errors.
 
-Every provider is primarily four functions (dokka reference:
-https://recloudstream.github.io/dokka/library/com.lagradost.cloudstream3/-main-a-p-i/index.html):
+---
 
-| Method | Purpose |
-|---|---|
-| `search(query)` | Turn a search box query into a `List<SearchResponse>` |
-| `getMainPage(page, request)` | Populate the home screen's rows (uses `mainPageOf(...)`) |
-| `load(url)` | Turn a `SearchResponse`'s url/data into a full `LoadResponse` (metadata + episode list) |
-| `loadLinks(data, isCasting, subtitleCallback, callback)` | Resolve `data` into actual playable `ExtractorLink`s, emitted via `callback` |
+## Reference Documentation (Open as Needed)
 
-### Minimal skeleton
+- **`references/extractors/`** — Production-ready Kotlin `ExtractorApi` implementations ready for instant inclusion.
+- **`references/archetypes/`** — End-to-end architecture patterns for Short Dramas, Anime multi-servers, and BDIX FTP portals.
+- **`references/scraping-guide.md`** — Devtools inspection, bypassing bot guards, handling AES/Base64 obfuscation, and header injection.
+- **`references/provider-cookbook.md`** — Full recipes for movies, TV series, pagination, and data passing.
+- **`references/project-setup.md`** — Gradle configs, CI workflow gotchas, JitPack stubs, and `repo.json`/`plugins.json`.
 
-```kotlin
-package com.example
-
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
-import org.jsoup.nodes.Element
-
-class MySiteProvider : MainAPI() {
-    override var mainUrl = "https://example.com"
-    override var name = "MySite"
-    override val hasMainPage = true
-    override var lang = "en"
-    override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
-
-    override val mainPage = mainPageOf(
-        "$mainUrl/recent" to "Recently Added",
-    )
-
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val doc = app.get(request.data).document
-        val items = doc.select("div.item").mapNotNull { it.toSearchResponse() }
-        return newHomePageResponse(request.name, items)
-    }
-
-    override suspend fun search(query: String): List<SearchResponse> {
-        return app.get("$mainUrl/search?q=$query").document
-            .select("div.item").mapNotNull { it.toSearchResponse() }
-    }
-
-    private fun Element.toSearchResponse(): SearchResponse? {
-        val a = selectFirst("a") ?: return null
-        val href = fixUrl(a.attr("href"))
-        val title = a.attr("title").ifBlank { a.text() }
-        val poster = fixUrlNull(selectFirst("img")?.attr("src"))
-        return newMovieSearchResponse(title, href, TvType.Movie) { posterUrl = poster }
-    }
-
-    override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
-        val title = doc.selectFirst("h1")?.text() ?: throw ErrorLoadingException("No title")
-        val poster = fixUrlNull(doc.selectFirst("img.poster")?.attr("src"))
-        val plot = doc.selectFirst("div.description")?.text()
-
-        return newMovieLoadResponse(title, url, TvType.Movie, url) {
-            this.posterUrl = poster
-            this.plot = plot
-        }
-    }
-
-    override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
-        val doc = app.get(data).document
-        val iframe = doc.selectFirst("iframe")?.attr("src") ?: return false
-        // Delegate to a built-in/known extractor when the embed host is already supported:
-        loadExtractor(iframe, data, subtitleCallback, callback)
-        return true
-    }
-}
-```
-
-Register it:
-
-```kotlin
-package com.example
-
-import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
-import com.lagradost.cloudstream3.plugins.BasePlugin
-
-@CloudstreamPlugin
-class MySitePlugin : BasePlugin() {
-    override fun load() {
-        registerMainAPI(MySiteProvider())
-    }
-}
-```
-
-For the corresponding `build.gradle.kts` (per-plugin metadata block) see
-`references/project-setup.md`.
-
-## Writing a custom extractor
-
-If `loadLinks` needs to decode/deobfuscate a video host CloudStream doesn't already support,
-write an `ExtractorApi`:
-
-```kotlin
-class MyHostExtractor : ExtractorApi() {
-    override val name = "MyHost"
-    override val mainUrl = "https://myhost.example"
-    override val requiresReferer = true
-
-    override suspend fun getUrl(
-        url: String,
-        referer: String?,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ) {
-        val playlistUrl = "..." // decoded/derived from `url`'s page
-        callback(
-            newExtractorLink(name, name, playlistUrl, ExtractorLinkType.M3U8) {
-                this.referer = referer ?: mainUrl
-                this.quality = Qualities.Unknown.value
-            }
-        )
-    }
-}
-```
-
-`newExtractorLink` takes its optional fields (`referer`, `quality`, `headers`, etc.) through the
-trailing builder lambda — passing them as named constructor parameters is a common compile error.
-
-## Reference files (open as needed)
-
-- **`references/scraping-guide.md`** — how to actually get the data: CSS selectors vs. regex,
-  parsing a site's own JSON API with Jackson, spotting/bypassing devtools-detection scripts,
-  disguising a scraper (headers, session-class patterns, Cloudflare/captcha), and the full method
-  for hunting down the real video link (iframes → network tab → work backwards; Base64/AES
-  obfuscation; what to do when a captcha guards the link).
-- **`references/provider-cookbook.md`** — fuller, closer-to-real-world versions of search,
-  getMainPage, load (movie vs. TV series with seasons/episodes), and loadLinks, plus notes on
-  `SearchResponse`/`LoadResponse` variants and JSON-as-url data passing.
-- **`references/project-setup.md`** — TestPlugins fork setup, annotated root and per-plugin
-  `build.gradle.kts`, the `cloudstream { }` metadata block, `repo.json`/`plugins.json`, and a
-  checklist of known gotchas (pinned dependency versions, CI first-run failures, plugins that
-  silently don't appear in the app).
-
-## Key gotchas up front
-
-- `language` in the `cloudstream { }` block is required — a missing/mismatched language hides
-  the plugin from the extension browser entirely.
-- Don't add `apiVersion` to the `cloudstream { }` block; it isn't a valid property.
-- Pin Jackson to `2.13.1` — newer versions break on older Android devices.
-- The CI "clean" step fails on the very first run because no `.cs3` exists yet in `builds`;
-  append `|| true` to that step until the first successful build.
-- Episodes are not paginated in CloudStream — if a show has 20 seasons spread across separate
-  site pages, the provider must fetch and flatten all of them itself.
-- **Never use `apmap`** — it is deprecated with `DeprecationLevel.ERROR` because it blocks threads with `runBlocking`. Always use `amap` or `amapIndexed`.
-- If a site rate-limits or blocks simultaneous homepage requests, set `sequentialMainPage = true`.
-- Use the built-in `JsUnpacker(script).unpack()` for Dean Edwards `eval(p,a,c,k,e,d)` packed scripts before trying third-party JS engines.
+---
 
 ## Quick Reference & API Cheat Sheet
 
@@ -289,7 +156,4 @@ trailing builder lambda — passing them as named constructor parameters is a co
 | ClearKey DRM DASH | `newDrmExtractorLink(name, name, mpdUrl, ExtractorLinkType.DASH, CLEARKEY_UUID, "oct", kidB64Url, keyB64Url)` |
 | Anime Dub/Sub | `newAnimeSearchResponse(name, url, TvType.Anime) { addDubStatus(dubExist = true, dubEpisodes = d, subExist = true, subEpisodes = s) }` |
 | Backdrops & Extras | `this.backgroundPosterUrl = backdrop; addActors(listOf("...")); addTrailer(trailerUrl)` |
-| Plugin Settings UI | Subclass `Plugin()` and configure `openSettings = { ... }` with a `BottomSheetDialogFragment` |
 | Player Stream Interceptor | Override `getVideoInterceptor(extractorLink): Interceptor` to attach auth/headers during playback |
-
-

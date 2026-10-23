@@ -1,55 +1,70 @@
-# CloudStream Provider Development Skill
+# CloudStream Provider Development & Continuous Self-Learning Skill
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-blueviolet.svg)](https://github.com/recloudstream/cloudstream)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-blue.svg)](https://kotlinlang.org/)
 [![CloudStream](https://img.shields.io/badge/CloudStream-3.0-orange.svg)](https://github.com/recloudstream)
+[![Self-Learning](https://img.shields.io/badge/Engine-Self--Learning-brightgreen.svg)](LEARNING_LOG.md)
 
-An expert pair-programming skill for [Google Antigravity](https://antigravity.google) tailored for building, reverse engineering, debugging, and maintaining **CloudStream** (`recloudstream`) plugins and providers in Kotlin.
+An expert pair-programming skill for [Google Antigravity](https://antigravity.google), Claude Code, Cursor, Codex, and Grok. Tailored for building, reverse engineering, debugging, and maintaining **CloudStream** (`recloudstream`) plugins and providers in Kotlin.
+
+Equipped with an **Autonomous Self-Learning Engine** that mines technical discoveries from active development sessions, harvests reusable Kotlin extractors, maintains a step-by-step evolution ledger, and auto-syncs across environments.
 
 ---
 
 ## 🎯 What This Skill Does
 
-When activated, your Antigravity agent is equipped with deep domain knowledge of the CloudStream plugin architecture, including:
-- Implementing the 4 core provider methods (`search`, `getMainPage`, `load`, `loadLinks`).
-- Writing custom `ExtractorApi` implementations for complex or encrypted video hosts.
-- Inspecting network traffic, sniffing obfuscated `.m3u8`/`.mp4` stream links, and bypassing common devtools/crawler guards.
-- Correct Gradle configuration (`TestPlugins` template, JitPack stubs, metadata blocks, Jackson version pinning).
-- Automated CI/CD workflow troubleshooting (`builds` branch setup, `repo.json`, and `plugins.json` manifest generation).
+- **Autonomous Self-Training**: Trains itself 1 step further every session, capturing new video hosters, decryption routines, and CMS archetypes into permanent libraries.
+- **Provider Healing (`/heal`)**: Diagnoses broken providers, updates expired selectors, injects modular extractors, and auto-increments version in `build.gradle.kts` for CloudStream in-app updates.
+- **Two-Tier Verification Gate**: Verifies live stream URLs return HTTP 200 before writing code, and tests `./gradlew :make` to guarantee valid `.cs3` compilation.
+- **Core Provider Architecture**: Deep scaffolding for `search`, `getMainPage`, `load`, and `loadLinks`.
+- **Custom Extractor Library**: Pre-built, drop-in Kotlin `ExtractorApi` implementations for ByteDance VolcEngine, AWSStream, Upns, GDMirror, and more.
+- **Automated CI/CD & GitHub Push**: Enforces semantic git commits and automated pushes to remote tracking branches.
 
 ---
 
 ## 📂 Repository Structure
 
 ```
-├── SKILL.md                          # Main skill definition, skeleton provider, and core rules
+├── SKILL.md                          # Main skill definition, slash commands, and core rules
 ├── README.md                         # Project documentation and installation guide
+├── LEARNING_LOG.md                   # Step-by-step master ledger of learned capabilities
 ├── LICENSE                           # MIT License
-├── .gitattributes                    # Line ending normalization
+├── package.json                      # Version tracking and CLI manifest (v1.2.0)
 ├── workflows/
 │   ├── add-provider.md               # Step-by-step workflow triggered by /provider <url>
-│   └── optimize-provider.md          # 6-pillar repository audit triggered by /optimize
+│   ├── heal-provider.md              # Extension repair & version bump triggered by /heal
+│   ├── optimize-provider.md          # 6-pillar repository audit triggered by /optimize
+│   └── learn-step.md                 # Autonomous context-mining triggered by /learn
 ├── rules/
-│   ├── auto-push-github.md           # Mandatory rule to always commit & push after finishing work
-│   └── provider-version-bump.md      # Auto-version bumping & changelog maintenance rule
+│   ├── self-learning-loop.md         # Mandatory rule to advance skill 1 step after every task
+│   ├── provider-version-bump.md      # Auto-version bumping & changelog maintenance rule
+│   └── auto-push-github.md           # Mandatory rule to always commit & push after finishing work
 └── references/
+    ├── extractors/                   # Standalone, reusable Kotlin ExtractorApi library
+    │   ├── VolcEngineExtractor.kt    # ByteDance / VolcEngine short-drama VOD extractor
+    │   ├── AWSStreamExtractor.kt     # AWSStream / Zephyrflick / Ravok multi-host extractor
+    │   ├── UpnsPlayerExtractor.kt    # Upns / Packed JS M3U8 stream extractor
+    │   └── GDMirrorExtractor.kt      # Google Drive & fast CDN direct link extractor
+    ├── archetypes/                   # Architectural blueprints for common streaming platforms
+    │   ├── short-drama-api.md        # Vertical mobile OTT short-drama REST API pattern
+    │   ├── anime-multiserver.md      # Multi-server, Dub/Sub anime aggregator pattern
+    │   └── bdix-ftp-portal.md        # High-speed local ISP/FTP direct stream pattern
     ├── project-setup.md              # Template fork, Gradle files, repo.json/plugins.json & CI
     ├── provider-cookbook.md          # Real-world implementations of all provider methods
-    └── scraping-guide.md             # Reverse-engineering video hosts, selectors, regex & network sniffing
+    └── scraping-guide.md             # Reverse-engineering video hosts, selectors, regex & sniffing
 ```
 
-### Reference Documentation & Workflows
+---
 
-| Document | Description |
-|---|---|
-| [`SKILL.md`](SKILL.md) | The core instructions and progressive disclosure entry point loaded by Antigravity. |
-| [`rules/auto-push-github.md`](rules/auto-push-github.md) | **Automatic GitHub Push Rule**: Mandates committing and pushing all modified/created code to GitHub before finishing any turn. |
-| [`workflows/add-provider.md`](workflows/add-provider.md) | **Automated workflow for `/provider <url>`**: executes site reconnaissance, CloudStream architecture mapping, provider scaffolding, compilation checks, and GitHub push. |
-| [`workflows/optimize-provider.md`](workflows/optimize-provider.md) | **Automated audit for `/optimize`**: 6-pillar deep scan for thread safety, anti-rate-limiting, UI polish, multi-quality playback, crash prevention, Gradle integrity, and GitHub push. |
-| [`references/project-setup.md`](references/project-setup.md) | Complete guide to configuring `TestPlugins`, root/plugin `build.gradle.kts`, distribution manifests (`repo.json` / `plugins.json`), and CI gotchas. |
-| [`references/provider-cookbook.md`](references/provider-cookbook.md) | Step-by-step cookbook patterns for Movies, TV Series, pagination, JSON payload caching, and custom extractors. |
-| [`references/scraping-guide.md`](references/scraping-guide.md) | Practical guide to extracting playable streams: hunting iframes, reversing obfuscation (Base64/AES), and handling headers. |
+## ⚡ Slash Commands & Triggers
+
+| Command | Action | Workflow |
+|---|---|---|
+| `/provider <url>` | Create a new provider from target website | [`workflows/add-provider.md`](workflows/add-provider.md) |
+| `/heal <ProviderName>` | Diagnose and repair a broken provider, bumping version | [`workflows/heal-provider.md`](workflows/heal-provider.md) |
+| `/optimize` | Run 6-pillar deep audit across provider repository | [`workflows/optimize-provider.md`](workflows/optimize-provider.md) |
+| `/learn` | Manually trigger context mining & advance skill step | [`workflows/learn-step.md`](workflows/learn-step.md) |
 
 ---
 
@@ -88,50 +103,12 @@ git clone https://github.com/sheikhshariarnehal/cloudstream-skill.git "$env:USER
 
 ---
 
-## 💡 Triggering the Skill
+## 🧠 Continuous Learning Protocol
 
-### ⚡ Quick Slash Command: `/provider <url>`
-Simply provide a streaming website URL and trigger `/provider`:
-```
-/provider https://example-movies.to
-```
-or
-```
-Here is the site https://example-movies.to /provider add this new provider
-```
-**What Antigravity automatically does:**
-1. **Understands the Site**: Scrapes HTML, tests search query endpoints, identifies catalog categories, checks detail metadata, and inspects video players/iframes for playable `.m3u8`/`.mp4` stream links.
-2. **Maps CloudStream Architecture**: Determines provider name, package structure, supported `TvType`s, and built-in or custom extractor requirements.
-3. **Implements the Provider**: Scaffolds `<SiteName>Provider/`, `build.gradle.kts`, `Provider.kt`, and `Plugin.kt`.
-4. **Validates & Builds**: Checks compilation and guides local deployment.
-
-### 🛠️ Audit & Performance Command: `/optimize`
-Run this command inside any CloudStream provider repo or pass a specific module:
-```
-/optimize
-```
-or
-```
-/optimize MLSBDProvider
-```
-**What Antigravity audits & fixes:**
-1. **Threading & Coroutines**: Replaces deprecated blocking `apmap` with non-blocking `amap`/`amapIndexed` to eradicate UI freezes.
-2. **Network & Throttling**: Injects `cacheTime`, `timeout`, and `sequentialMainPage = true` to protect against Cloudflare 429 rate limits.
-3. **UI Polish & Metadata**: Injects `backgroundPosterUrl` backdrops, `addActors`, `addTrailer`, duration, tags, and infinite scrolling (`hasNext = true`).
-4. **Playback & Multi-Quality**: Enforces proper `newExtractorLink` builder lambda syntax, multi-resolution streams (1080p, 720p, 480p), and ExoPlayer `getVideoInterceptor`.
-5. **Crash Prevention (Zero NPEs)**: Replaces brittle `!!` unwraps and unchecked `.toInt()` conversions with safe parsing (`.toIntOrNull()`, `parsedSafe<T>()`).
-6. **Gradle Integrity**: Verifies IETF language codes, JVM 1.8 targets, and removes broken `apiVersion` tags.
-
-### Other Triggers
-Antigravity also automatically invokes this skill whenever you ask questions or issue instructions related to:
-- Creating or fixing a CloudStream provider or plugin.
-- Scraping a streaming website for movie/TV links in Kotlin.
-- Writing a `MainAPI` or `ExtractorApi` class.
-- Configuring `build.gradle.kts` for a CloudStream `.cs3` plugin.
-- Setting up or troubleshooting `repo.json` and `plugins.json`.
-
----
-
-## 📄 License
-
-This skill is distributed under the [MIT License](LICENSE).
+Whenever a task completes:
+1. **Mine Context**: Extract new video hosts, regex patterns, anti-bot headers, or Gradle solutions.
+2. **Harvest Reusable Code**: Save Kotlin classes into `references/extractors/` and blueprints into `references/archetypes/`.
+3. **Log Advance**: Increment Step N in `LEARNING_LOG.md`.
+4. **Bump Version**: Update patch version in `package.json` and `SKILL.md`.
+5. **Triple Sync**: Synchronize source repo, workspace `.agents`, and global user config.
+6. **Push to GitHub**: Commit with conventional semantic message and push to remote.
