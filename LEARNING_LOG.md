@@ -173,3 +173,16 @@ This ledger tracks the autonomous evolution of the **CloudStream Provider Develo
      Eliminated early exceptions when cookies are unconfigured. The provider now inspects the target page HTML first for public streams, parses `script#plyr-tv-scanned` / `plyr-config` JSON seasons, queries Cast API, and provides clear in-app guidance if credentials are required.
 - **Harvested Files**: [`references/archetypes/wordpress-cast-api.md`](references/archetypes/wordpress-cast-api.md)
 - **Impact**: Restores full functionality to `MojaLossProvider` (v3), enabling seamless search, browsing of all 11 catalog sections (including Trending and 4K), resilient episode tree generation, and authenticated stream resolution.
+
+---
+
+### Step 11 — 2026-10-24: Dual-Layer CloudStream NSFW Filter Architecture & In-App Adult Content Suppression
+- **Target / Source Repositories**: `MovieBoxProvider` in `nehal-CloudStream` & CloudStream Core App (`TvType.NSFW`, `MainAPI.settingsForProvider.enableAdult`)
+- **Category**: Content Moderation & Parental Controls, Dual-Layer NSFW Architecture, Cross-App Setting Synchronization
+- **Learned Discoveries & Capabilities**:
+  1. **CloudStream Global NSFW Contract (`MainAPI.settingsForProvider.enableAdult`)**: CloudStream core automatically populates `MainAPI.settingsForProvider.enableAdult` across all providers from the user's setting in Settings -> Extensions -> "Enable NSFW on supported Extensions".
+  2. **Backend Parental Filter Activation (`restrictKid`)**: MovieBox's REST, ranking, and search endpoints accept a `restrictKid` parameter (0 = unrestricted adult, 1 = kid/family safe filter). Synchronizing `restrictKid = if (adultEnabled) 0 else 1` activates server-side suppression of explicit media.
+  3. **Client-Side Word-Boundary Adult Filter**: Built-in regex engine with regex word boundaries `\b` scanning titles, genres, and tags for adult tokens (`18+`, `erotic`, `sensual`, `adult`, `hentai`, `ecchi`, etc.), completely dropping matched items when adult mode is off, and badging them with `TvType.NSFW` when on.
+  4. **In-App Quick Toggle with Preference Fallback**: Provided an intuitive `🔞 Show 18+ / Adult Content` toggle inside `SectionManagerFragment`, falling back to CloudStream's global preference if not explicitly overridden by the user.
+- **Impact**: Completely eliminates adult content pollution across MovieBox homepage sections and search results by default, while seamlessly integrating with CloudStream's native NSFW settings when enabled.
+
