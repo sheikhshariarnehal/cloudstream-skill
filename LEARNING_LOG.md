@@ -117,6 +117,23 @@ This ledger tracks the autonomous evolution of the **CloudStream Provider Develo
   5. **Direct Episode-Targeted Resource Fallback in `loadLinks`**: Upgraded the fallback query to `/wefeed-mobile-bff/subject-api/resource` to include `&se={se}&ep={ep}` when `se > 0` or `ep > 0`, ensuring multi-season series fetch streams for the requested episode rather than defaulting to page 1 of Season 1.
 - **Impact**: Completely eliminates the "Coming Soon" blocker on all series across CloudStream (Anime Series, Indian Series, USA Series, etc.), populating every season and episode for direct playback.
 
+---
+
+### Step 8 — 2026-10-24: Solved Series Episode "No Link Found" via H5 BFF Stream Pipeline & Referer Auth Bypass
+- **Target / Source Repositories**: `MovieBoxProvider` in `nehal-CloudStream` & MovieBox H5 API (`movie-box.co`)
+- **Category**: Mobile BFF vs H5 API Discrepancy, CDN Referer Anti-Scraping Bypass, Multi-Dub Link Resolution, ExtractorLink Referer Injection
+- **Learned Discoveries & Capabilities**:
+  1. **Root Cause of "No Link Found" on Series Episodes**: While Movies have their streams in `resourceDetectors` and `/play-info`, TV series episodes on MovieBox only return a 23-second promo/decoy video (`macdn.aoneroom.com/other/...`, size 824 KB) on `/play-info` and `/subject-api/resource`. The decoy filter (`isDecoyStream`) correctly rejected this promo, leaving `emittedCount == 0` and triggering CloudStream's "No link found".
+  2. **The TV Series Stream Pipeline (`wefeed-h5api-bff`)**: TV series episode streams are hosted via the H5 BFF endpoint:
+     `$subDomain/wefeed-h5api-bff/subject/play?subjectId=$subId&se=$se&ep=$ep&detailPath=$subPath&streamSignType=1&supportCodecs[hevc]=1&supportCodecs[h264]=1`.
+     `detailPath` is extracted from `data.detailUrl` in `/wefeed-mobile-bff/subject-api/get?subjectId=$subjectId`. Without `detailPath`, the endpoint returns 0 streams; with `detailPath`, it returns full 1080p, 720p, 480p, 360p MP4 and DASH streams.
+  3. **Hakunatamatata CDN Anti-Hotlinking / 429 Bypass**: Streams hosted on `bcdnxw.hakunaymatata.com` return **HTTP 429 (Too Many Requests / Nginx block)** if requested without a Referer or with empty Referer headers. When requested with `Referer: https://movie-box.co/`, the CDN responds with **HTTP 206 Partial Content (video/mp4)** and streams flawlessly. All emitted video `ExtractorLink`s must include `this.referer = "https://movie-box.co/"` and `"Referer": "https://movie-box.co/"` in `this.headers`.
+  4. **Multi-Language Dub Resolution**: Discovered `/wefeed-h5api-bff/detail?detailPath=$detailPath` returns the complete dub list with `subjectId` and `detailPath` for each language audio feed (e.g. Original Audio, Hindi, English, Arabic). The resolver queries each dub and emits separate audio feeds (`MovieBox (Original Audio) 1080p`, `MovieBox (Hindi Audio) 1080p`).
+  5. **Stream Captions Extraction**: Added `loadStreamCaptions` querying `/wefeed-mobile-bff/subject-api/get-stream-captions?subjectId=$subjectId&streamId=$streamId` to fetch episode-specific multilingual subtitles.
+  6. **Decoy Filter Precision**: Refined `isDecoyStream` threshold from `1..300` seconds down to `1..45` seconds and added known decoy hash `5bebb475ecb0eb4fbb4e2f3bcbcde7b5`, preventing false positives on legitimate short anime while reliably blocking intro/promo clips.
+- **Impact**: Every episode across all TV series categories (Anime Series, Indian Series, USA Series, Japanese Series, South Korean Series, etc.) now resolves 1080p, 720p, 480p, 360p video streams with multi-audio dubs and plays smoothly without "No link found".
+
+
 
 
 
