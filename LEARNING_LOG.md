@@ -133,7 +133,43 @@ This ledger tracks the autonomous evolution of the **CloudStream Provider Develo
   6. **Decoy Filter Precision**: Refined `isDecoyStream` threshold from `1..300` seconds down to `1..45` seconds and added known decoy hash `5bebb475ecb0eb4fbb4e2f3bcbcde7b5`, preventing false positives on legitimate short anime while reliably blocking intro/promo clips.
 - **Impact**: Every episode across all TV series categories (Anime Series, Indian Series, USA Series, Japanese Series, South Korean Series, etc.) now resolves 1080p, 720p, 480p, 360p video streams with multi-audio dubs and plays smoothly without "No link found".
 
+---
+
+### Step 9 — 2026-10-24: Eradication of ExoPlayer Error 3003 (`ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED`) & ToonBox Link Validation
+- **Target / Source Repositories**: `ToonBoxProvider` & `VolcEngineExtractor` in `nehal-CloudStream` (`NetShortProvider`)
+- **Category**: Playback Container Verification, Media Stream Integrity, Fail-Safe Stream Resolution
+- **Learned Discoveries & Capabilities**:
+  1. **Root Cause of ExoPlayer Error 3003 (`ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED`)**:
+     When `defaultStreamUrl` in `TOONBOX_CATALOG` was set to an image asset (`https://volcengine-cdn-test.toonbox.com/freetoon/2026-02-04/0_1770185712.jpg`), `VolcEngineExtractor` blindly checked `if (url.startsWith("http"))` and emitted this JPEG image as an `ExtractorLink` with `type = ExtractorLinkType.VIDEO`. ExoPlayer attempted to parse the JPEG file as an MP4/MKV/HLS container, found no video container headers, and immediately threw `ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED (3003)` with a "No Links Found / Source error" toast.
+  2. **Strict Media Container Validation (`isMediaUrl`)**:
+     Added `isMediaUrl(url: String)` in `VolcEngineExtractor.kt` that explicitly checks and rejects non-video image extensions (`.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.svg`), and only permits genuine video formats (`.mp4`, `.m3u8`, `.mpd`, `.ts`, `.mkv`, `.webm`). Image candidates are logged and ignored, completely preventing corrupt links from reaching ExoPlayer.
+  3. **Clean Stream Handling in `ToonBoxProvider.loadLinks`**:
+     - Removed all dummy `.jpg` URLs from `TOONBOX_CATALOG`.
+     - Supports authenticated playback via `api/v1/video/get_play_url` when the user configures their token in Extension Settings.
+     - If no valid video stream is resolved, `loadLinks` displays a helpful Toast (`"ToonBox requires an account token for full streaming. Open Settings > Extensions > NetShort & ToonBox to add your token."`) and cleanly returns `false`.
+     - Returning `false` prevents ExoPlayer from launching with an invalid URL and eliminates the container parsing crash.
+- **Impact**: Completely eliminates `ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED (3003)` across all 56 animated comics in ToonBox, ensures strict media verification across `VolcEngineExtractor`, and bumps `NetShortProvider` to version 9.
 
 
 
 
+
+
+---
+
+### Step 10 — 2026-10-24: WordPress REST Cast API Resolver, CSRF Nonce Injection & Session Authentication
+- **Target / Source Repositories**: `MojaLossProvider` in `nehal-CloudStream` (`mojaloss.stream`)
+- **Category**: CMS Archetype, REST Cast Stream Resolver, Session Cookie Verification, WAF / Anti-Bot Bypass
+- **Learned Discoveries & Capabilities**:
+  1. **REST Cast API Stream Pipeline (`/wp-json/mojaloss/v1/cast/*`)**:
+     Discovered that Mojaloss resolves media playback through custom WordPress REST endpoints `/wp-json/mojaloss/v1/cast/movie` and `/wp-json/mojaloss/v1/cast/tv`. Calling these with cookie authentication requires the `X-WP-Nonce` header (extracted from inline page scripts `var wpApiSettings = {"nonce":"..."}` or `window.MojalossCast.nonce`). When accompanied by `X-WP-Nonce` and session cookies, the API returns direct playable video streams (`media_url`) and subtitle files (`tracks`).
+  2. **Apache mod_security / WAF 403 Forbidden Bypass on `wp-login.php`**:
+     Direct POST requests to `wp-login.php` using generic user-agents or missing standard browser headers (`Accept`, `Accept-Language`, `Origin`, `Referer`) trigger Apache 403 Forbidden. Fixed by performing an initial GET to retrieve the `wordpress_test_cookie`, followed by a POST with full desktop Chrome headers, and collecting session tokens across both `Set-Cookie` headers and `response.cookies`.
+  3. **Reliable Session Verification without REST Nonce Dependency**:
+     The previous verification endpoint (`/wp-json/wp/v2/users/me`) failed with 401 Unauthorized for cookie-authenticated sessions that lacked an active nonce. Replaced with an administrative redirect check (`GET /wp-admin/` with `allowRedirects = false`), which cleanly responds with 200 OK or dashboard redirect when authenticated and 302 to `wp-login.php` when invalid, with a fallback inspection of home page auth indicators (`body.logged-in`, `[data-authed='1']`).
+  4. **Trending Catalog Scraping (`.trending-card`)**:
+     Fixed missing trending catalog by mapping `.trending-card` containers, extracting title and release year from `(YYYY)` format, isolating poster URLs from `.poster-wrapper img`, and flagging TV series metadata.
+  5. **Fail-Safe Link Extraction**:
+     Eliminated early exceptions when cookies are unconfigured. The provider now inspects the target page HTML first for public streams, parses `script#plyr-tv-scanned` / `plyr-config` JSON seasons, queries Cast API, and provides clear in-app guidance if credentials are required.
+- **Harvested Files**: [`references/archetypes/wordpress-cast-api.md`](references/archetypes/wordpress-cast-api.md)
+- **Impact**: Restores full functionality to `MojaLossProvider` (v3), enabling seamless search, browsing of all 11 catalog sections (including Trending and 4K), resilient episode tree generation, and authenticated stream resolution.

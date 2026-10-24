@@ -1,6 +1,6 @@
 {
   "name": "cloudstream-skill",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Cross-platform CLI installer for CloudStream Provider Development AI Agent Skill across Antigravity IDE, Claude Code, Cursor, Codex, and Grok.",
   "main": "lib/installer.js",
   "bin": {
